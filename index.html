@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>StudyDesk — Student Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0b0c10;
+  --s1:#13141a;
+  --s2:#1a1c25;
+  --s3:#21232e;
+  --border:rgba(255,255,255,0.06);
+  --border2:rgba(255,255,255,0.12);
+  --text:#eeeef2;
+  --muted:#6b6e80;
+  --muted2:#9396a8;
+  --accent:#7c6dfa;
+  --accent-glow:rgba(124,109,250,0.25);
+  --green:#22d47e;
+  --amber:#f5a623;
+  --red:#f0506e;
+  --blue:#4faff5;
+  --pink:#e879a0;
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 32px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(11,12,16,0.85);backdrop-filter:blur(14px);z-index:100;}
+.logo{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-0.5px;}
+.logo span{color:var(--accent);}
+.topbar-right{display:flex;align-items:center;gap:16px;}
+.date-pill{background:var(--s2);border:1px solid var(--border2);border-radius:30px;padding:6px 14px;font-size:13px;color:var(--muted2);}
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--pink));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;cursor:pointer;}
+
+/* NAV TABS */
+.nav-tabs{display:flex;gap:4px;padding:16px 32px 0;border-bottom:1px solid var(--border);}
+.tab{padding:10px 20px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;border-radius:6px 6px 0 0;}
+.tab:hover{color:var(--text);background:var(--s2);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* LAYOUT */
+.page{display:none;padding:28px 32px;max-width:1200px;margin:0 auto;animation:fadeUp .3s ease;}
+.page.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+/* GREETING BANNER */
+.banner{background:var(--s1);border:1px solid var(--border2);border-radius:16px;padding:28px 32px;margin-bottom:24px;position:relative;overflow:hidden;}
+.banner::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,var(--accent-glow),transparent 70%);pointer-events:none;}
+.banner h2{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;margin-bottom:6px;}
+.banner p{color:var(--muted2);font-size:15px;}
+.banner-stats{display:flex;gap:20px;margin-top:20px;flex-wrap:wrap;}
+.bstat{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:12px 20px;min-width:110px;}
+.bstat-val{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;}
+.bstat-label{font-size:12px;color:var(--muted);margin-top:2px;}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;}
+@media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr;}}
+
+/* CARD */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:22px;}
+.card-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.card-title .icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+
+/* TASKS */
+.task-input-row{display:flex;gap:8px;margin-bottom:14px;}
+.task-input-row input{flex:1;background:var(--s2);border:1px solid var(--border2);border-radius:8px;padding:9px 14px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border .2s;}
+.task-input-row input:focus{border-color:var(--accent);}
+.task-input-row input::placeholder{color:var(--muted);}
+.btn{padding:9px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.btn-accent{background:var(--accent);color:#fff;}
+.btn-accent:hover{background:#6558e8;transform:translateY(-1px);}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--muted2);}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+.task-list{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;}
+.task-item{display:flex;align-items:center;gap:10px;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;transition:border .2s;}
+.task-item:hover{border-color:var(--border2);}
+.task-cb{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border2);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.task-cb.done{background:var(--green);border-color:var(--green);}
+.task-cb.done::after{content:'✓';font-size:10px;color:#000;}
+.task-text{flex:1;font-size:13px;transition:all .15s;}
+.task-text.done{text-decoration:line-through;color:var(--muted);}
+.task-del{color:var(--muted);font-size:16px;cursor:pointer;opacity:0;transition:opacity .15s;}
+.task-item:hover .task-del{opacity:1;}
+.task-tag{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;}
+
+/* NOTES */
+.notes-grid{display:flex;flex-direction:column;gap:10px;max-height:320px;overflow-y:auto;}
+.note-card{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:border .2s;}
+.note-card:hover{border-color:var(--accent);}
+.note-title{font-weight:500;font-size:14px;margin-bottom:4px;}
+.note-preview{font-size:12px;color:var(--muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.note-date{font-size:11px;color:var(--muted);margin-top:8px;}
+.note-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;}
+
+/* NOTE MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--border2);border-radius:16px;width:500px;max-width:95vw;padding:28px;animation:fadeUp .2s ease;}
+.modal h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:600;margin-bottom:16px;}
+.modal input,.modal textarea,.modal select{width:100%;background:var(--s2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border .2s;margin-bottom:10px;}
+.modal input:focus,.modal textarea:focus{border-color:var(--accent);}
+.modal textarea{resize:vertical;min-height:120px;}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:8px;}
+.subject-select{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.subj-btn{padding:5px 12px;border-radius:20px;font-size:12px;border:1.5px solid var(--border2);background:transparent;color:var(--muted2);cursor:pointer;transition:all .15s;}
+.subj-btn.active{color:#fff;}
+
+/* POMODORO */
+.pomo-wrap{display:flex;flex-direction:column;align-items:center;padding:10px 0;}
+.pomo-ring{width:170px;height:170px;position:relative;margin:0 auto 20px;}
+.pomo-ring svg{transform:rotate(-90deg);}
+.pomo-ring circle{fill:none;stroke-width:10;stroke-linecap:round;}
+.pomo-ring .track{stroke:var(--s3);}
+.pomo-ring .progress{stroke:var(--accent);transition:stroke-dashoffset .5s linear;}
+.pomo-time{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.pomo-time .mins{font-family:'Syne',sans-serif;font-size:36px;font-weight:700;}
+.pomo-time .label{font-size:12px;color:var(--muted);margin-top:2px;}
+.pomo-btns{display:flex;gap:10px;justify-content:center;margin-bottom:14px;}
+.pomo-modes{display:flex;gap:6px;justify-content:center;}
+.mode-btn{padding:6px 14px;border-radius:20px;font-size:12px;border:1px solid var(--border2);background:transparent;color:var(--muted2);cursor:pointer;transition:all .15s;}
+.mode-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.pomo-sessions{text-align:center;margin-top:12px;font-size:13px;color:var(--muted);}
+.pomo-dots{display:flex;gap:6px;justify-content:center;margin-top:6px;}
+.pomo-dot{width:10px;height:10px;border-radius:50%;background:var(--s3);transition:background .3s;}
+.pomo-dot.done{background:var(--accent);}
+
+/* PROGRESS */
+.subject-prog{display:flex;flex-direction:column;gap:12px;}
+.prog-row{display:flex;flex-direction:column;gap:5px;}
+.prog-info{display:flex;justify-content:space-between;font-size:13px;}
+.prog-bar-bg{height:6px;background:var(--s3);border-radius:3px;overflow:hidden;}
+.prog-bar{height:100%;border-radius:3px;transition:width .5s ease;}
+
+/* QUICK STATS */
+.quick-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.qs{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+.qs-val{font-family:'Syne',sans-serif;font-size:28px;font-weight:700;}
+.qs-label{font-size:12px;color:var(--muted);margin-top:3px;}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px;}
+
+/* STREAK */
+.streak-row{display:flex;gap:5px;margin-top:8px;}
+.streak-day{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;}
+.streak-day.active{background:var(--accent);color:#fff;}
+.streak-day.inactive{background:var(--s3);color:var(--muted);}
+
+/* UPCOMING */
+.upcoming-list{display:flex;flex-direction:column;gap:8px;}
+.upcoming-item{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--s2);border-radius:8px;border-left:3px solid var(--accent);}
+.upcoming-item.warn{border-left-color:var(--amber);}
+.upcoming-item.danger{border-left-color:var(--red);}
+.up-subject{font-size:13px;font-weight:500;}
+.up-type{font-size:11px;color:var(--muted);}
+.up-date{margin-left:auto;font-size:12px;color:var(--muted2);white-space:nowrap;}
+
+/* INPUT GROUP */
+.inp-group{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .topbar{padding:14px 16px;}
+  .nav-tabs{padding:12px 16px 0;gap:2px;}
+  .tab{padding:8px 12px;font-size:13px;}
+  .page{padding:20px 16px;}
+  .grid2,.grid3{grid-template-columns:1fr;}
+  .banner h2{font-size:20px;}
+  .quick-stats{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">Study<span>Desk</span></div>
+  <div class="topbar-right">
+    <div class="date-pill" id="topdate"></div>
+    <div class="avatar" title="Profile">S</div>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-tabs">
+  <div class="tab active" onclick="switchTab('home')">🏠 Home</div>
+  <div class="tab" onclick="switchTab('tasks')">✅ Tasks</div>
+  <div class="tab" onclick="switchTab('notes')">📝 Notes</div>
+  <div class="tab" onclick="switchTab('timer')">⏱ Focus Timer</div>
+  <div class="tab" onclick="switchTab('progress')">📊 Progress</div>
+</div>
+
+<!-- ═══════════ HOME PAGE ═══════════ -->
+<div class="page active" id="page-home">
+  <div class="banner">
+    <h2 id="greeting">Good Morning! 👋</h2>
+    <p>Ready to crush today's goals? Here's your overview.</p>
+    <div class="banner-stats">
+      <div class="bstat"><div class="bstat-val" id="home-tasks" style="color:var(--accent)">0</div><div class="bstat-label">Pending Tasks</div></div>
+      <div class="bstat"><div class="bstat-val" id="home-notes" style="color:var(--blue)">0</div><div class="bstat-label">Notes Saved</div></div>
+      <div class="bstat"><div class="bstat-val" id="home-sessions" style="color:var(--green)">0</div><div class="bstat-label">Focus Sessions</div></div>
+      <div class="bstat"><div class="bstat-val" id="home-streak" style="color:var(--amber)">0</div><div class="bstat-label">Day Streak 🔥</div></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <!-- UPCOMING -->
+    <div class="card">
+      <div class="card-title"><div class="icon" style="background:#1a1040">📅</div> Upcoming Deadlines</div>
+      <div class="upcoming-list" id="upcoming-list">
+        <div style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0;">No deadlines added yet.<br>Go to Tasks to add some!</div>
+      </div>
+    </div>
+
+    <!-- STREAK -->
+    <div class="card">
+      <div class="card-title"><div class="icon" style="background:#2a1500">🔥</div> Study Streak</div>
+      <p style="font-size:13px;color:var(--muted2);margin-bottom:12px;">Days you studied this week</p>
+      <div class="streak-row" id="streak-row"></div>
+      <p style="font-size:12px;color:var(--muted);margin-top:14px;" id="streak-msg">Keep going! Mark today as studied.</p>
+      <button class="btn btn-accent" style="margin-top:12px;width:100%;" onclick="markStudied()">✅ Mark Today as Studied</button>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;">
+    <div class="card">
+      <div class="card-title"><div class="icon" style="background:#0b2318">📊</div> Quick Subject Progress</div>
+      <div class="subject-prog" id="home-progress"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ TASKS PAGE ═══════════ -->
+<div class="page" id="page-tasks">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+    <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;">My Tasks</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;" id="filter-btns">
+      <button class="subj-btn active" onclick="filterTasks('all',this)" style="border-color:var(--accent);color:var(--accent);">All</button>
+      <button class="subj-btn" onclick="filterTasks('Math',this)">Math</button>
+      <button class="subj-btn" onclick="filterTasks('Physics',this)">Physics</button>
+      <button class="subj-btn" onclick="filterTasks('Chemistry',this)">Chemistry</button>
+      <button class="subj-btn" onclick="filterTasks('English',this)">English</button>
+      <button class="subj-btn" onclick="filterTasks('CS',this)">CS</button>
+      <button class="subj-btn" onclick="filterTasks('Other',this)">Other</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title"><div class="icon" style="background:#1a1040">➕</div> Add New Task</div>
+    <div class="inp-group" style="margin-bottom:10px;">
+      <input type="text" id="task-inp" placeholder="What do you need to do?" style="flex:2;background:var(--s2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;min-width:200px;" onkeydown="if(event.key==='Enter')addTask()"/>
+      <select id="task-subject" style="background:var(--s2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
+        <option value="Math">📐 Math</option>
+        <option value="Physics">⚡ Physics</option>
+        <option value="Chemistry">🧪 Chemistry</option>
+        <option value="English">📖 English</option>
+        <option value="CS">💻 CS</option>
+        <option value="Other">📌 Other</option>
+      </select>
+      <select id="task-priority" style="background:var(--s2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
+        <option value="high">🔴 High</option>
+        <option value="mid">🟡 Medium</option>
+        <option value="low">🟢 Low</option>
+      </select>
+      <input type="date" id="task-due" style="background:var(--s2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;"/>
+      <button class="btn btn-accent" onclick="addTask()">Add Task</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="justify-content:space-between;">
+      <span><div class="icon" style="background:#0b2318;display:inline-flex;">📋</div> Task List</span>
+      <button class="btn btn-outline" onclick="clearDone()" style="font-size:12px;padding:5px 12px;">Clear Completed</button>
+    </div>
+    <div class="task-list" id="task-list" style="max-height:420px;"></div>
+  </div>
+</div>
+
+<!-- ═══════════ NOTES PAGE ═══════════ -->
+<div class="page" id="page-notes">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+    <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;">My Notes</h2>
+    <button class="btn btn-accent" onclick="openNoteModal()">+ New Note</button>
+  </div>
+
+  <div style="margin-bottom:16px;">
+    <input type="text" id="note-search" placeholder="🔍 Search notes..." onkeyup="renderNotes()" style="width:100%;background:var(--s1);border:1px solid var(--border2);border-radius:10px;padding:11px 16px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;"/>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;" id="notes-grid">
+    <div style="color:var(--muted);font-size:14px;text-align:center;padding:40px;grid-column:1/-1;">No notes yet. Click "+ New Note" to get started!</div>
+  </div>
+</div>
+
+<!-- ═══════════ TIMER PAGE ═══════════ -->
+<div class="page" id="page-timer">
+  <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:20px;">Focus Timer</h2>
+  <div class="grid2">
+    <div class="card" style="display:flex;flex-direction:column;align-items:center;">
+      <div class="pomo-modes" style="margin-bottom:20px;">
+        <button class="mode-btn active" onclick="setMode('pomo',this)">🍅 Pomodoro (25m)</button>
+        <button class="mode-btn" onclick="setMode('short',this)">☕ Short Break (5m)</button>
+        <button class="mode-btn" onclick="setMode('long',this)">🌿 Long Break (15m)</button>
+      </div>
+
+      <div class="pomo-ring">
+        <svg width="170" height="170" viewBox="0 0 170 170">
+          <circle class="track" cx="85" cy="85" r="75" stroke-dasharray="471" stroke-dashoffset="0"/>
+          <circle class="progress" id="pomo-progress" cx="85" cy="85" r="75" stroke-dasharray="471" stroke-dashoffset="0"/>
+        </svg>
+        <div class="pomo-time">
+          <div class="mins" id="pomo-display">25:00</div>
+          <div class="label" id="pomo-mode-label">Focus Time</div>
+        </div>
+      </div>
+
+      <div class="pomo-btns">
+        <button class="btn btn-outline" onclick="resetTimer()" style="padding:10px 20px;">↺ Reset</button>
+        <button class="btn btn-accent" id="pomo-btn" onclick="toggleTimer()" style="padding:10px 28px;font-size:15px;">▶ Start</button>
+      </div>
+
+      <div class="pomo-sessions">
+        <div style="margin-bottom:6px;">Sessions completed today</div>
+        <div class="pomo-dots" id="pomo-dots"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="icon" style="background:#1a1040">💡</div> Study Tips</div>
+      <div style="display:flex;flex-direction:column;gap:10px;" id="tips-list"></div>
+      <div style="margin-top:20px;">
+        <div class="card-title" style="margin-bottom:10px;"><div class="icon" style="background:#0b2318">🎵</div> Ambience</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="subj-btn" onclick="playAmbience('rain')">🌧 Rain</button>
+          <button class="subj-btn" onclick="playAmbience('cafe')">☕ Cafe</button>
+          <button class="subj-btn" onclick="playAmbience('forest')">🌳 Forest</button>
+          <button class="subj-btn" onclick="playAmbience('off')">🔇 Off</button>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;" id="ambience-label">No ambience playing.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ PROGRESS PAGE ═══════════ -->
+<div class="page" id="page-progress">
+  <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:20px;">My Progress</h2>
+
+  <div class="quick-stats" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;margin-bottom:20px;">
+    <div class="qs"><div class="qs-val" id="prog-total" style="color:var(--accent)">0</div><div class="qs-label">Total Tasks</div></div>
+    <div class="qs"><div class="qs-val" id="prog-done" style="color:var(--green)">0</div><div class="qs-label">Completed</div></div>
+    <div class="qs"><div class="qs-val" id="prog-notes" style="color:var(--blue)">0</div><div class="qs-label">Notes</div></div>
+    <div class="qs"><div class="qs-val" id="prog-focus" style="color:var(--amber)">0h 0m</div><div class="qs-label">Focus Time</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title"><div class="icon" style="background:#1a1040">📊</div> Subject Completion</div>
+      <div class="subject-prog" id="prog-subjects"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="icon" style="background:#2a1500">📅</div> Weekly Activity</div>
+      <div id="weekly-chart" style="display:flex;align-items:flex-end;gap:8px;height:120px;margin-top:10px;"></div>
+      <div style="display:flex;gap:8px;margin-top:6px;" id="weekly-labels"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-title"><div class="icon" style="background:#0b2318">🏆</div> Achievements</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;" id="achievements"></div>
+  </div>
+</div>
+
+<!-- NOTE MODAL -->
+<div class="modal-overlay" id="note-modal">
+  <div class="modal">
+    <h3 id="note-modal-title">New Note</h3>
+    <input type="text" id="note-inp-title" placeholder="Note title..." />
+    <div class="subject-select" id="note-subj-btns">
+      <button class="subj-btn active" data-subj="Math" onclick="selNoteSubj(this)" style="border-color:var(--accent);color:var(--accent);">Math</button>
+      <button class="subj-btn" data-subj="Physics" onclick="selNoteSubj(this)">Physics</button>
+      <button class="subj-btn" data-subj="Chemistry" onclick="selNoteSubj(this)">Chemistry</button>
+      <button class="subj-btn" data-subj="English" onclick="selNoteSubj(this)">English</button>
+      <button class="subj-btn" data-subj="CS" onclick="selNoteSubj(this)">CS</button>
+      <button class="subj-btn" data-subj="Other" onclick="selNoteSubj(this)">Other</button>
+    </div>
+    <textarea id="note-inp-body" placeholder="Write your note here..."></textarea>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeNoteModal()">Cancel</button>
+      <button class="btn" id="note-del-btn" onclick="deleteNote()" style="background:transparent;border:1px solid var(--red);color:var(--red);display:none;">Delete</button>
+      <button class="btn btn-accent" onclick="saveNote()">Save Note</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───
+let tasks = JSON.parse(localStorage.getItem('sd_tasks')||'[]');
+let notes = JSON.parse(localStorage.getItem('sd_notes')||'[]');
+let sessions = parseInt(localStorage.getItem('sd_sessions')||'0');
+let focusMins = parseInt(localStorage.getItem('sd_focus')||'0');
+let streak = JSON.parse(localStorage.getItem('sd_streak')||'{"days":[],"count":0}');
+let activity = JSON.parse(localStorage.getItem('sd_activity')||'{}');
+let editNoteId = null;
+let curNoteSubj = 'Math';
+let taskFilter = 'all';
+
+// ─── INIT ───
+const SUBJECT_COLORS = {
+  'Math':'#7c6dfa','Physics':'#4faff5','Chemistry':'#f0506e',
+  'English':'#22d47e','CS':'#f5a623','Other':'#e879a0'
+};
+const TIPS = [
+  "📝 Write summaries in your own words — recall beats re-reading.",
+  "🧠 Space your revision: review after 1 day, 1 week, 1 month.",
+  "🎯 Set a specific goal before each session.",
+  "🚰 Stay hydrated — even mild dehydration hurts concentration.",
+  "📵 Put your phone face-down during focus sessions.",
+  "✍️ Handwriting notes improves memory retention.",
+  "😴 Sleep is when your brain consolidates memories.",
+];
+
+function init() {
+  setDate();
+  setGreeting();
+  renderStreak();
+  renderTasks();
+  renderNotes();
+  updateHome();
+  updateProgress();
+  renderTips();
+  renderPomoDots();
+  renderWeeklyChart();
+}
+
+function setDate() {
+  const d = new Date();
+  const opts = {weekday:'short',day:'numeric',month:'short',year:'numeric'};
+  document.getElementById('topdate').textContent = d.toLocaleDateString('en-IN',opts);
+}
+
+function setGreeting() {
+  const h = new Date().getHours();
+  const g = h<12?'Good Morning! 👋':h<17?'Good Afternoon! ☀️':'Good Evening! 🌙';
+  document.getElementById('greeting').textContent = g;
+}
+
+// ─── TABS ───
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('active', ['home','tasks','notes','timer','progress'][i]===name);
+  });
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(name==='progress'){updateProgress();renderWeeklyChart();}
+  if(name==='home'){updateHome();}
+}
+
+// ─── TASKS ───
+function save(){localStorage.setItem('sd_tasks',JSON.stringify(tasks));}
+function addTask(){
+  const v = document.getElementById('task-inp').value.trim();
+  if(!v) return;
+  tasks.unshift({id:Date.now(),text:v,subject:document.getElementById('task-subject').value,priority:document.getElementById('task-priority').value,due:document.getElementById('task-due').value,done:false});
+  document.getElementById('task-inp').value='';
+  save(); renderTasks(); updateHome(); updateProgress();
+}
+function toggleTask(id){
+  const t = tasks.find(x=>x.id===id);
+  if(t){t.done=!t.done; if(t.done){logActivity();}};
+  save(); renderTasks(); updateHome(); updateProgress();
+}
+function deleteTask(id){tasks=tasks.filter(x=>x.id!==id);save();renderTasks();updateHome();updateProgress();}
+function clearDone(){tasks=tasks.filter(x=>!x.done);save();renderTasks();updateHome();updateProgress();}
+function filterTasks(f,btn){
+  taskFilter=f;
+  document.querySelectorAll('#filter-btns .subj-btn').forEach(b=>{
+    b.classList.remove('active');b.style.borderColor='';b.style.color='';
+  });
+  btn.classList.add('active');btn.style.borderColor='var(--accent)';btn.style.color='var(--accent)';
+  renderTasks();
+}
+function renderTasks(){
+  const list = document.getElementById('task-list');
+  let filtered = taskFilter==='all'?tasks:tasks.filter(t=>t.subject===taskFilter);
+  if(!filtered.length){list.innerHTML='<div style="color:var(--muted);text-align:center;padding:30px;font-size:14px;">No tasks here. Add one above! 🎉</div>';return;}
+  const prio = {high:'🔴',mid:'🟡',low:'🟢'};
+  list.innerHTML = filtered.map(t=>{
+    const due = t.due?`<span style="font-size:11px;color:${isOverdue(t.due)&&!t.done?'var(--red)':'var(--muted)'};margin-left:8px;">📅 ${formatDate(t.due)}</span>`:'';
+    return `<div class="task-item">
+      <div class="task-cb ${t.done?'done':''}" onclick="toggleTask(${t.id})"></div>
+      <span class="task-text ${t.done?'done':''}">${t.text}</span>
+      <span class="task-tag" style="background:${SUBJECT_COLORS[t.subject]}22;color:${SUBJECT_COLORS[t.subject]};font-size:10px;padding:2px 8px;border-radius:20px;">${t.subject}</span>
+      <span>${prio[t.priority]||''}</span>
+      ${due}
+      <span class="task-del" onclick="deleteTask(${t.id})">✕</span>
+    </div>`;
+  }).join('');
+}
+function isOverdue(due){return due&&new Date(due)<new Date();}
+function formatDate(d){if(!d)return '';const x=new Date(d);return x.toLocaleDateString('en-IN',{day:'numeric',month:'short'});}
+
+// ─── NOTES ───
+function saveNotes(){localStorage.setItem('sd_notes',JSON.stringify(notes));}
+function openNoteModal(id){
+  editNoteId = id||null;
+  document.getElementById('note-modal-title').textContent = id?'Edit Note':'New Note';
+  document.getElementById('note-del-btn').style.display = id?'':'none';
+  if(id){
+    const n = notes.find(x=>x.id===id);
+    document.getElementById('note-inp-title').value=n.title;
+    document.getElementById('note-inp-body').value=n.body;
+    curNoteSubj=n.subject;
+  } else {
+    document.getElementById('note-inp-title').value='';
+    document.getElementById('note-inp-body').value='';
+    curNoteSubj='Math';
+  }
+  document.querySelectorAll('#note-subj-btns .subj-btn').forEach(b=>{
+    const s = b.dataset.subj===curNoteSubj;
+    b.classList.toggle('active',s);
+    b.style.borderColor=s?'var(--accent)':'';
+    b.style.color=s?'var(--accent)':'';
+  });
+  document.getElementById('note-modal').classList.add('open');
+}
+function closeNoteModal(){document.getElementById('note-modal').classList.remove('open');}
+function selNoteSubj(btn){
+  curNoteSubj=btn.dataset.subj;
+  document.querySelectorAll('#note-subj-btns .subj-btn').forEach(b=>{
+    b.classList.remove('active');b.style.borderColor='';b.style.color='';
+  });
+  btn.classList.add('active');btn.style.borderColor='var(--accent)';btn.style.color='var(--accent)';
+}
+function saveNote(){
+  const title = document.getElementById('note-inp-title').value.trim();
+  const body = document.getElementById('note-inp-body').value.trim();
+  if(!title) return;
+  if(editNoteId){
+    const n = notes.find(x=>x.id===editNoteId);
+    if(n){n.title=title;n.body=body;n.subject=curNoteSubj;n.date=new Date().toISOString();}
+  } else {
+    notes.unshift({id:Date.now(),title,body,subject:curNoteSubj,date:new Date().toISOString()});
+  }
+  saveNotes();renderNotes();closeNoteModal();updateHome();updateProgress();
+}
+function deleteNote(){
+  notes=notes.filter(x=>x.id!==editNoteId);
+  saveNotes();renderNotes();closeNoteModal();updateHome();updateProgress();
+}
+function renderNotes(){
+  const q = document.getElementById('note-search')?.value?.toLowerCase()||'';
+  const filtered = notes.filter(n=>n.title.toLowerCase().includes(q)||n.body.toLowerCase().includes(q));
+  const grid = document.getElementById('notes-grid');
+  if(!filtered.length){grid.innerHTML='<div style="color:var(--muted);font-size:14px;text-align:center;padding:40px;grid-column:1/-1;">'+(q?'No matching notes.':'No notes yet. Click "+ New Note" to start!')+'</div>';return;}
+  grid.innerHTML = filtered.map(n=>{
+    const c = SUBJECT_COLORS[n.subject]||'#fff';
+    const d = new Date(n.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+    return `<div class="note-card" onclick="openNoteModal(${n.id})" style="border-left:3px solid ${c};">
+      <div style="display:flex;align-items:center;margin-bottom:6px;">
+        <span class="note-dot" style="background:${c}"></span>
+        <span style="font-size:10px;color:${c};font-weight:500;">${n.subject}</span>
+      </div>
+      <div class="note-title">${n.title}</div>
+      <div class="note-preview">${n.body||'No content.'}</div>
+      <div class="note-date">${d}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── POMODORO ───
+let pomoInterval=null, pomoPaused=true, pomoLeft=25*60, pomoTotal=25*60;
+const MODES={pomo:{mins:25,label:'Focus Time'},short:{mins:5,label:'Short Break'},long:{mins:15,label:'Long Break'}};
+let curMode='pomo';
+function setMode(m,btn){
+  clearInterval(pomoInterval);pomoPaused=true;curMode=m;
+  pomoTotal=MODES[m].mins*60;pomoLeft=pomoTotal;
+  document.getElementById('pomo-display').textContent=fmtTime(pomoLeft);
+  document.getElementById('pomo-mode-label').textContent=MODES[m].label;
+  document.getElementById('pomo-btn').textContent='▶ Start';
+  document.getElementById('pomo-progress').style.strokeDashoffset='0';
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function toggleTimer(){
+  if(pomoPaused){
+    pomoPaused=false;
+    document.getElementById('pomo-btn').textContent='⏸ Pause';
+    pomoInterval=setInterval(()=>{
+      pomoLeft--;
+      document.getElementById('pomo-display').textContent=fmtTime(pomoLeft);
+      const pct=1-(pomoLeft/pomoTotal);
+      const circ=471;
+      document.getElementById('pomo-progress').style.strokeDashoffset=(circ*(1-pct)).toFixed(1);
+      if(pomoLeft<=0){
+        clearInterval(pomoInterval);pomoPaused=true;
+        document.getElementById('pomo-btn').textContent='▶ Start';
+        if(curMode==='pomo'){
+          sessions++;focusMins+=25;
+          localStorage.setItem('sd_sessions',sessions);
+          localStorage.setItem('sd_focus',focusMins);
+          renderPomoDots();updateHome();updateProgress();
+          logActivity();
+        }
+        alert(curMode==='pomo'?'🍅 Session complete! Take a break.':'☕ Break done! Ready to focus?');
+      }
+    },1000);
+  } else {
+    clearInterval(pomoInterval);pomoPaused=true;
+    document.getElementById('pomo-btn').textContent='▶ Resume';
+  }
+}
+function resetTimer(){
+  clearInterval(pomoInterval);pomoPaused=true;pomoLeft=pomoTotal;
+  document.getElementById('pomo-display').textContent=fmtTime(pomoLeft);
+  document.getElementById('pomo-btn').textContent='▶ Start';
+  document.getElementById('pomo-progress').style.strokeDashoffset='0';
+}
+function fmtTime(s){return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;}
+function renderPomoDots(){
+  const d=document.getElementById('pomo-dots');
+  const total=4;
+  d.innerHTML=Array.from({length:total},(_,i)=>`<div class="pomo-dot ${i<(sessions%4)?'done':''}"></div>`).join('');
+}
+function renderTips(){
+  document.getElementById('tips-list').innerHTML=TIPS.slice(0,4).map(t=>`<div style="font-size:13px;color:var(--muted2);padding:8px 12px;background:var(--s2);border-radius:8px;">${t}</div>`).join('');
+}
+function playAmbience(t){
+  const labels={'rain':'🌧 Rain sounds playing...','cafe':'☕ Cafe ambience on...','forest':'🌳 Forest sounds playing...','off':'🔇 Ambience off.'};
+  document.getElementById('ambience-label').textContent=labels[t];
+}
+
+// ─── STREAK ───
+function renderStreak(){
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const today=new Date().getDay();
+  const mapped=[1,2,3,4,5,6,0];
+  const row=document.getElementById('streak-row');
+  row.innerHTML=days.map((d,i)=>`<div class="streak-day ${streak.days.includes(i)?'active':'inactive'}">${d}</div>`).join('');
+}
+function markStudied(){
+  const d=new Date().getDay();const idx=[1,2,3,4,5,6,0].indexOf(d);
+  if(!streak.days.includes(idx)){streak.days.push(idx);streak.count++;}
+  localStorage.setItem('sd_streak',JSON.stringify(streak));
+  renderStreak();updateHome();
+  document.getElementById('streak-msg').textContent=`🔥 ${streak.count} day streak! Keep it up!`;
+}
+function logActivity(){
+  const d=new Date().toISOString().slice(0,10);
+  activity[d]=(activity[d]||0)+1;
+  localStorage.setItem('sd_activity',JSON.stringify(activity));
+}
+
+// ─── HOME UPDATE ───
+function updateHome(){
+  const pending=tasks.filter(t=>!t.done).length;
+  document.getElementById('home-tasks').textContent=pending;
+  document.getElementById('home-notes').textContent=notes.length;
+  document.getElementById('home-sessions').textContent=sessions;
+  document.getElementById('home-streak').textContent=streak.count;
+
+  // upcoming deadlines
+  const upcoming = tasks.filter(t=>!t.done&&t.due).sort((a,b)=>new Date(a.due)-new Date(b.due)).slice(0,4);
+  const ul=document.getElementById('upcoming-list');
+  if(!upcoming.length){ul.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0;">No deadlines added yet.<br>Go to Tasks to add some!</div>';return;}
+  ul.innerHTML=upcoming.map(t=>{
+    const diff=Math.ceil((new Date(t.due)-new Date())/(1000*60*60*24));
+    const cls=diff<0?'danger':diff<=2?'warn':'';
+    const label=diff<0?'Overdue':diff===0?'Today':diff===1?'Tomorrow':`${diff} days left`;
+    return `<div class="upcoming-item ${cls}">
+      <div><div class="up-subject">${t.text}</div><div class="up-type">${t.subject} · ${t.priority} priority</div></div>
+      <div class="up-date">${label}</div>
+    </div>`;
+  }).join('');
+
+  // home progress
+  const subjs=Object.keys(SUBJECT_COLORS);
+  const hp=document.getElementById('home-progress');
+  const tasksBySubj = subjs.map(s=>({s,total:tasks.filter(t=>t.subject===s).length,done:tasks.filter(t=>t.subject===s&&t.done).length})).filter(x=>x.total>0).slice(0,4);
+  if(!tasksBySubj.length){hp.innerHTML='<div style="color:var(--muted);font-size:13px;">Add some tasks to see progress!</div>';return;}
+  hp.innerHTML=tasksBySubj.map(({s,total,done})=>{
+    const pct=total?Math.round(done/total*100):0;
+    return `<div class="prog-row"><div class="prog-info"><span>${s}</span><span style="color:var(--muted)">${done}/${total}</span></div><div class="prog-bar-bg"><div class="prog-bar" style="width:${pct}%;background:${SUBJECT_COLORS[s]};"></div></div></div>`;
+  }).join('');
+}
+
+// ─── PROGRESS UPDATE ───
+function updateProgress(){
+  const total=tasks.length,done=tasks.filter(t=>t.done).length;
+  document.getElementById('prog-total').textContent=total;
+  document.getElementById('prog-done').textContent=done;
+  document.getElementById('prog-notes').textContent=notes.length;
+  const h=Math.floor(focusMins/60),m=focusMins%60;
+  document.getElementById('prog-focus').textContent=`${h}h ${m}m`;
+
+  const subjs=Object.keys(SUBJECT_COLORS);
+  const ps=document.getElementById('prog-subjects');
+  ps.innerHTML=subjs.map(s=>{
+    const t=tasks.filter(x=>x.subject===s).length;
+    const d=tasks.filter(x=>x.subject===s&&x.done).length;
+    const pct=t?Math.round(d/t*100):0;
+    return `<div class="prog-row"><div class="prog-info"><span>${s}</span><span style="color:var(--muted)">${pct}%</span></div><div class="prog-bar-bg"><div class="prog-bar" style="width:${pct}%;background:${SUBJECT_COLORS[s]};"></div></div></div>`;
+  }).join('');
+
+  // achievements
+  const ach=[];
+  if(done>=1) ach.push({e:'⭐',t:'First Task Done'});
+  if(done>=5) ach.push({e:'🔥',t:'5 Tasks Crushed'});
+  if(done>=10) ach.push({e:'💪',t:'10 Tasks Legend'});
+  if(notes.length>=1) ach.push({e:'📝',t:'Note Taker'});
+  if(notes.length>=5) ach.push({e:'📚',t:'5 Notes!'});
+  if(sessions>=1) ach.push({e:'🍅',t:'First Pomodoro'});
+  if(sessions>=5) ach.push({e:'⚡',t:'Focus Master'});
+  if(streak.count>=3) ach.push({e:'🌟',t:'3-Day Streak'});
+  if(streak.count>=7) ach.push({e:'🏆',t:'Week Warrior'});
+  const achEl=document.getElementById('achievements');
+  achEl.innerHTML=ach.length?ach.map(a=>`<div style="background:var(--s2);border:1px solid var(--border2);border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:8px;"><span style="font-size:20px;">${a.e}</span><span style="font-size:13px;font-weight:500;">${a.t}</span></div>`).join(''):'<div style="color:var(--muted);font-size:13px;">Complete tasks and study sessions to unlock achievements!</div>';
+}
+
+// ─── WEEKLY CHART ───
+function renderWeeklyChart(){
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const today=new Date();
+  const vals=days.map((_,i)=>{
+    const d=new Date(today);
+    d.setDate(today.getDate()-(today.getDay()||7)+i+1);
+    return activity[d.toISOString().slice(0,10)]||0;
+  });
+  const max=Math.max(...vals,1);
+  const chart=document.getElementById('weekly-chart');
+  const labels=document.getElementById('weekly-labels');
+  chart.innerHTML=vals.map((v,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;background:${v>0?'var(--accent)':'var(--s3)'};border-radius:4px 4px 0 0;height:${Math.max(8,Math.round(v/max*100))}px;transition:height .5s;opacity:${v>0?1:0.4};"></div></div>`).join('');
+  labels.innerHTML=days.map(d=>`<div style="flex:1;text-align:center;font-size:11px;color:var(--muted);">${d}</div>`).join('');
+}
+
+// ─── CLOSE MODAL ON BG CLICK ───
+document.getElementById('note-modal').addEventListener('click',e=>{if(e.target===document.getElementById('note-modal'))closeNoteModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeNoteModal();});
+
+init();
+</script>
+</body>                     
+</html>
